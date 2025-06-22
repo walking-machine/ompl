@@ -35,6 +35,7 @@
 /* Author: Ioan Sucan */
 
 #include "ompl/base/DiscreteMotionValidator.h"
+#include "ompl/tools/debug/Profiler.h"
 #include "ompl/util/Exception.h"
 #include <queue>
 
@@ -48,6 +49,8 @@ void ompl::base::DiscreteMotionValidator::defaultSettings()
 bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const State *s2,
                                                       std::pair<State *, double> &lastValid) const
 {
+    tools::Profiler::ScopedBlock _("DiscreteMotionValidator::checkMotion 1");
+    tools::Profiler::Event("DiscreteMotionValidator::checkMotion 1");
     /* assume motion starts in a valid configuration so s1 is valid */
 
     bool result = true;
@@ -92,6 +95,8 @@ bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const Sta
 
 bool ompl::base::DiscreteMotionValidator::checkMotion(const State *s1, const State *s2) const
 {
+    tools::Profiler::ScopedBlock _("DiscreteMotionValidator::checkMotion 2");
+    tools::Profiler::Event("DiscreteMotionValidator::checkMotion 2");
     /* assume motion starts in a valid configuration so s1 is valid */
     if (!si_->isValid(s2))
     {

@@ -84,7 +84,10 @@ namespace ompl
                 /** \brief Start counting time for the block named \e name of the profiler \e prof */
                 ScopedBlock(const std::string &name, Profiler &prof = Profiler::Instance()) : name_(name), prof_(prof)
                 {
-                    prof_.begin(name);
+                    prof_.lock_.lock();
+                    name_ = prof.enable_prefix ? prof.prefix + name : name;
+                    prof.lock_.unlock();
+                    prof_.begin(name_);
                 }
 
                 ~ScopedBlock()
@@ -239,7 +242,6 @@ namespace ompl
                 return Instance().running();
             }
 
-        private:
             /** \brief Information about time spent in a section of the code */
             struct TimeInfo
             {
@@ -308,6 +310,42 @@ namespace ompl
                 std::map<std::string, TimeInfo> time;
             };
 
+            PerThread totalThreadData();
+            static PerThread TotalThreadData() {
+                return Instance().totalThreadData();
+            }
+
+            void setPrefix(std::string new_prefix) {
+                lock_.lock();
+                prefix = new_prefix;
+                lock_.unlock();
+            }
+
+            void enablePrefix() {
+                lock_.lock();
+                enable_prefix = true;
+                lock_.unlock();
+            }
+
+            void disablePrefix() {
+                lock_.lock();
+                enable_prefix = false;
+                lock_.unlock();
+            }
+
+            static void EnablePrefix() {
+                Instance().enablePrefix();
+            }
+
+            static void DisablePrefix() {
+                Instance().disablePrefix();
+            }
+
+            static void SetPrefix(std::string new_prefix) {
+                Instance().setPrefix(new_prefix);
+            }
+
+        private:
             void printThreadInfo(std::ostream &out, const PerThread &data);
 
             std::mutex lock_;
@@ -315,6 +353,8 @@ namespace ompl
             TimeInfo tinfo_;
             bool running_;
             bool printOnDestroy_;
+            std::string prefix = "";
+            bool enable_prefix = false;
         };
     }
 }

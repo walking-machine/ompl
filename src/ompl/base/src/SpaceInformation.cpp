@@ -48,6 +48,7 @@
 #include "ompl/base/spaces/ReedsSheppStateSpace.h"
 #include "ompl/base/spaces/constraint/ConstrainedStateSpace.h"
 #include "ompl/tools/config/MagicConstants.h"
+#include "ompl/tools/debug/Profiler.h"
 #include "ompl/util/Exception.h"
 #include "ompl/util/Time.h"
 
@@ -284,6 +285,7 @@ unsigned int ompl::base::SpaceInformation::getMotionStates(const State *s1, cons
 bool ompl::base::SpaceInformation::checkMotion(const std::vector<State *> &states, unsigned int count,
                                                unsigned int &firstInvalidStateIndex) const
 {
+    tools::Profiler::ScopedBlock _("SpaceInformation::checkMotion 1");
     assert(states.size() >= count);
     for (unsigned int i = 0; i < count; ++i)
         if (!isValid(states[i]))
@@ -296,6 +298,7 @@ bool ompl::base::SpaceInformation::checkMotion(const std::vector<State *> &state
 
 bool ompl::base::SpaceInformation::checkMotion(const std::vector<State *> &states, unsigned int count) const
 {
+    tools::Profiler::ScopedBlock _("SpaceInformation::checkMotion 2");
     assert(states.size() >= count);
     if (count > 0)
     {
