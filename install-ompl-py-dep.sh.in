@@ -1,0 +1,28 @@
+#!/bin/bash
+
+export DEBIAN_FRONTEND=noninteractive
+
+install_python_binding_dependencies()
+{
+    apt-get -y install \
+        castxml \
+        libboost-numpy-dev \
+        libboost-python-dev \
+        python3-celery \
+        python3-dev \
+        python3-flask \
+        python3-numpy \
+        python3-opengl \
+        python3-pip \
+        python3-pyqt5.qtopengl \
+        pypy3 \
+        wget && \
+        # install additional python dependencies via pip
+        pip install numpy==1.26.4
+        pip install pandas
+        pip install ipykernel
+        pip install matplotlib --upgrade
+        pip install -vU https://github.com/CastXML/pygccxml/archive/develop.zip pyplusplus
+}
+
+install_python_binding_dependencies
