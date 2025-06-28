@@ -23,6 +23,11 @@ install_python_binding_dependencies()
         pip install ipykernel
         pip install matplotlib --upgrade
         pip install -vU https://github.com/CastXML/pygccxml/archive/develop.zip pyplusplus
+        wget https://downloads.skewed.de/skewed-keyring/skewed-keyring_1.1_all_$(lsb_release -s -c).deb
+        dpkg -i skewed-keyring_1.1_all_$(lsb_release -s -c).deb
+        echo "deb [signed-by=/usr/share/keyrings/skewed-keyring.gpg] https://downloads.skewed.de/apt $(lsb_release -s -c) main" > /etc/apt/sources.list.d/skewed.list
+        apt-get -y update
+        apt-get -y install python3-graph-tool
 }
 
 install_python_binding_dependencies
