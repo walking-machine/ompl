@@ -917,7 +917,8 @@ class ompl_geometric_generator_t(code_generator_t):
             {0}_wrapper(::ompl::base::SpaceInformationPtr const &si) : ompl::geometric::{0}(si),
                 bp::wrapper<ompl::geometric::{0}>()
             {{
-                OMPL_WARN("%s: this planner uses multiple threads and might crash if your StateValidityChecker, OptimizationObjective, etc., are allocated within Python.", getName().c_str());
+                setSingleThread(true);
+                OMPL_WARN("%s: this planner no longer uses multiple threads and will not crash if your StateValidityChecker, OptimizationObjective, etc., are allocated within Python.", getName().c_str());
             }}
             """.format(planner))
 

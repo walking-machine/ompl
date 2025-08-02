@@ -340,14 +340,29 @@ ompl::base::PlannerStatus ompl::geometric::SPARStwo::solve(const base::PlannerTe
     resetFailures();
     base::PathPtr sol;
     base::PlannerTerminationCondition ptcOrFail([this, &ptc] { return ptc || reachedFailureLimit(); });
-    std::thread slnThread([this, &ptcOrFail, &sol] { checkForSolution(ptcOrFail, sol); });
+    // auto slnThread =[this, &sol] { checkForSolutionOnce(sol); };
 
-    // Construct planner termination condition which also takes M into account
-    base::PlannerTerminationCondition ptcOrStop([this, &ptc] { return ptc || reachedTerminationCriterion(); });
+    // // Construct planner termination condition which also takes M into account
+    // base::PlannerTerminationCondition ptcOrStop([this, &ptc, &slnThread] { slnThread(); return ptc || reachedTerminationCriterion(); });
+    // constructRoadmap(ptcOrStop);
+
+    // // Ensure slnThread is ceased before exiting solve
+    // //slnThread.join();
+
+    std::thread slnThread;
+    if (!single_thread_)
+        slnThread = std::thread([this, &ptcOrFail, &sol] { checkForSolution(ptcOrFail, sol); });
+
+    auto pre_ptc = single_thread_ ?
+        std::function{[this, &sol]() { checkForSolutionOnce(sol); }} :
+        std::function{[](){}};
+    // Construct planner termination condition which also takes maxFailures_ and addedSolution_ into account
+    base::PlannerTerminationCondition ptcOrStop([this, &ptc, &pre_ptc] { pre_ptc(); return ptc || reachedTerminationCriterion(); });
     constructRoadmap(ptcOrStop);
 
     // Ensure slnThread is ceased before exiting solve
-    slnThread.join();
+    if (!single_thread_)
+        slnThread.join();
 
     OMPL_INFORM("%s: Created %u states", getName().c_str(), boost::num_vertices(g_) - nrStartStates);
 
@@ -362,21 +377,28 @@ ompl::base::PlannerStatus ompl::geometric::SPARStwo::solve(const base::PlannerTe
     }
 }
 
-void ompl::geometric::SPARStwo::checkForSolution(const base::PlannerTerminationCondition &ptc, base::PathPtr &solution)
+void ompl::geometric::SPARStwo::checkForSolutionOnce(base::PathPtr &solution)
 {
     auto *goal = static_cast<base::GoalSampleableRegion *>(pdef_->getGoal().get());
+
+    // Check for any new goal states
+    if (goal->maxSampleCount() > goalM_.size())
+    {
+        const base::State *st = pis_.nextGoal();
+        if (st != nullptr)
+            goalM_.push_back(addGuard(si_->cloneState(st), GOAL));
+    }
+
+    // Check for a solution
+    addedSolution_ = haveSolution(startM_, goalM_, solution);
+}
+
+void ompl::geometric::SPARStwo::checkForSolution(const base::PlannerTerminationCondition &ptc, base::PathPtr &solution)
+{
     while (!ptc && !addedSolution_)
     {
-        // Check for any new goal states
-        if (goal->maxSampleCount() > goalM_.size())
-        {
-            const base::State *st = pis_.nextGoal();
-            if (st != nullptr)
-                goalM_.push_back(addGuard(si_->cloneState(st), GOAL));
-        }
+        checkForSolutionOnce(solution);
 
-        // Check for a solution
-        addedSolution_ = haveSolution(startM_, goalM_, solution);
         // Sleep for 1ms
         if (!addedSolution_)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

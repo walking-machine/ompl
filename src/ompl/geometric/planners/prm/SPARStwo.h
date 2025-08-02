@@ -424,6 +424,15 @@ namespace ompl
             bool haveSolution(const std::vector<Vertex> &starts, const std::vector<Vertex> &goals,
                               base::PathPtr &solution);
 
+            /** One iteration that checks for solution */
+            void checkForSolutionOnce(base::PathPtr &solution);
+
+            /** \brief Set to true if used from Python. */
+            void setSingleThread(bool use_single_thread)
+            {
+                single_thread_ = use_single_thread;
+            }
+
             /** Thread that checks for solution */
             void checkForSolution(const base::PlannerTerminationCondition &ptc, base::PathPtr &solution);
 
@@ -515,6 +524,9 @@ namespace ompl
 
             /** \brief Maximum range for allowing two samples to support an interface */
             double denseDelta_{0.};
+
+            /** \brief Run the algorithm in a single thread, useful for bindings */
+            bool single_thread_ = false;
 
             /** \brief Mutex to guard access to the Graph member (g_) */
             mutable std::mutex graphMutex_;

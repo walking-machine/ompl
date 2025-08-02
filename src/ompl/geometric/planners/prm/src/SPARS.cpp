@@ -208,24 +208,30 @@ ompl::geometric::SPARS::DenseVertex ompl::geometric::SPARS::addSample(base::Stat
     return result;
 }
 
-void ompl::geometric::SPARS::checkForSolution(const base::PlannerTerminationCondition &ptc, base::PathPtr &solution)
+void ompl::geometric::SPARS::checkForSolutionOnce(base::PathPtr &solution)
 {
     auto *goal = static_cast<base::GoalSampleableRegion *>(pdef_->getGoal().get());
+    // Check for any new goal states
+    if (goal->maxSampleCount() > goalM_.size())
+    {
+        const base::State *st = pis_.nextGoal();
+        if (st != nullptr)
+        {
+            addMilestone(si_->cloneState(st));
+            goalM_.push_back(addGuard(si_->cloneState(st), GOAL));
+        }
+    }
+
+    // Check for a solution
+    addedSolution_ = haveSolution(startM_, goalM_, solution);
+}
+
+void ompl::geometric::SPARS::checkForSolution(const base::PlannerTerminationCondition &ptc, base::PathPtr &solution)
+{
     while (!ptc && !addedSolution_)
     {
-        // Check for any new goal states
-        if (goal->maxSampleCount() > goalM_.size())
-        {
-            const base::State *st = pis_.nextGoal();
-            if (st != nullptr)
-            {
-                addMilestone(si_->cloneState(st));
-                goalM_.push_back(addGuard(si_->cloneState(st), GOAL));
-            }
-        }
+        checkForSolutionOnce(solution);
 
-        // Check for a solution
-        addedSolution_ = haveSolution(startM_, goalM_, solution);
         // Sleep for 1ms
         if (!addedSolution_)
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -353,14 +359,21 @@ ompl::base::PlannerStatus ompl::geometric::SPARS::solve(const base::PlannerTermi
     resetFailures();
     base::PathPtr sol;
     base::PlannerTerminationCondition ptcOrFail([this, &ptc] { return ptc || reachedFailureLimit(); });
-    std::thread slnThread([this, &ptcOrFail, &sol] { checkForSolution(ptcOrFail, sol); });
 
+    std::thread slnThread;
+    if (!single_thread_)
+        slnThread = std::thread([this, &ptcOrFail, &sol] { checkForSolution(ptcOrFail, sol); });
+
+    auto pre_ptc = single_thread_ ?
+        std::function{[this, &sol]() { checkForSolutionOnce(sol); }} :
+        std::function{[](){}};
     // Construct planner termination condition which also takes maxFailures_ and addedSolution_ into account
-    base::PlannerTerminationCondition ptcOrStop([this, &ptc] { return ptc || reachedTerminationCriterion(); });
+    base::PlannerTerminationCondition ptcOrStop([this, &ptc, &pre_ptc] { pre_ptc(); return ptc || reachedTerminationCriterion(); });
     constructRoadmap(ptcOrStop);
 
     // Ensure slnThread is ceased before exiting solve
-    slnThread.join();
+    if (!single_thread_)
+        slnThread.join();
 
     if (sol)
         pdef_->addSolutionPath(sol, false, -1.0, getName());

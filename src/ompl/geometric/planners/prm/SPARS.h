@@ -433,6 +433,15 @@ namespace ompl
             /** Thread that checks for solution */
             void checkForSolution(const base::PlannerTerminationCondition &ptc, base::PathPtr &solution);
 
+            /** One iteration that checks for solution */
+            void checkForSolutionOnce(base::PathPtr &solution);
+
+            /** \brief Set to true if used from Python. */
+            void setSingleThread(bool use_single_thread)
+            {
+                single_thread_ = use_single_thread;
+            }
+
             /** \brief Check if there exists a solution, i.e., there exists a pair of milestones such that the first is
              * in \e start and the second is in \e goal, and the two milestones are in the same connected component. If
              * a solution is found, the path is saved. */
@@ -563,6 +572,9 @@ namespace ompl
 
             /** \brief SPARS parameter for Sparse Roadmap connection distance */
             double sparseDelta_{0.};
+
+            /** \brief Run the algorithm in a single thread, useful for bindings */
+            bool single_thread_ = false;
 
             /** \brief Random number generator */
             RNG rng_;
