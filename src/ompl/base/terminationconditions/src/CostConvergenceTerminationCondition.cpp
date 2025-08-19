@@ -35,6 +35,7 @@
 /* Author: Henning Kayser, Mark Moll */
 
 #include "ompl/base/terminationconditions/CostConvergenceTerminationCondition.h"
+#include "ompl/util/Console.h"
 
 ompl::base::CostConvergenceTerminationCondition::CostConvergenceTerminationCondition(
     ompl::base::ProblemDefinitionPtr &pdef, size_t solutionsWindow, double epsilon)
@@ -63,7 +64,7 @@ void ompl::base::CostConvergenceTerminationCondition::processNewSolution(const o
         averageCost_ > costLowerThreshold &&
         averageCost_ < costUpperThreshold)
     {
-        OMPL_DEBUG("CostConvergenceTerminationCondition: Cost of optimizing planner converged after %lu solutions", solutions_);
+        OMPL_WARN("CostConvergenceTerminationCondition: Cost of optimizing planner converged after %lu solutions", solutions_);
         terminate();
     }
 }

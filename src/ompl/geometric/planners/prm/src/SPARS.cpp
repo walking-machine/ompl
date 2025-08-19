@@ -234,7 +234,7 @@ void ompl::geometric::SPARS::checkForSolution(const base::PlannerTerminationCond
 
         // Sleep for 1ms
         if (!addedSolution_)
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 
@@ -258,6 +258,8 @@ bool ompl::geometric::SPARS::haveSolution(const std::vector<DenseVertex> &starts
                 if (p)
                 {
                     base::Cost pathCost = p->cost(opt_);
+                    if (static_cast<bool>(pdef_->getIntermediateSolutionCallback()))
+                        pdef_->getIntermediateSolutionCallback()(this, {}, pathCost);
                     if (opt_->isCostBetterThan(pathCost, bestCost_))
                         bestCost_ = pathCost;
                     // Check if optimization objective is satisfied

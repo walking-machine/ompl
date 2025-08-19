@@ -425,6 +425,8 @@ bool ompl::geometric::PRM::maybeConstructSolution(const std::vector<Vertex> &sta
                 if (p)
                 {
                     base::Cost pathCost = p->cost(opt_);
+                    if (starStrategy_ && static_cast<bool>(pdef_->getIntermediateSolutionCallback()))
+                        pdef_->getIntermediateSolutionCallback()(this, {}, pathCost);
                     if (opt_->isCostBetterThan(pathCost, bestCost_))
                         bestCost_ = pathCost;
                     // Check if optimization objective is satisfied
