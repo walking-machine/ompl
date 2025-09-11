@@ -191,6 +191,7 @@ namespace ompl
             /** \brief Clear the currently set starting states */
             void clearStartStates()
             {
+                pdef_->clearSolutionPaths();
                 pdef_->clearStartStates();
             }
 

@@ -99,6 +99,9 @@ void ompl::geometric::SimpleSetup::setGoalState(const base::ScopedState<> &goal,
 {
     pdef_->setGoalState(goal, threshold);
 
+    // Clear any past solutions since they no longer correspond to our start and goal states
+    pdef_->clearSolutionPaths();
+
     // force setup to rerun 
     configured_ = false;
 }
