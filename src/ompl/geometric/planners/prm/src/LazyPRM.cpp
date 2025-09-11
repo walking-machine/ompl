@@ -407,6 +407,8 @@ ompl::base::PlannerStatus ompl::geometric::LazyPRM::solve(const base::PlannerTer
                 }
                 if (opt_->isCostBetterThan(c, bestCost_))
                 {
+                    if (starStrategy_ && static_cast<bool>(pdef_->getIntermediateSolutionCallback()))
+                        pdef_->getIntermediateSolutionCallback()(this, {}, c);
                     bestSolution = solution;
                     bestCost_ = c;
                 }

@@ -270,6 +270,8 @@ bool ompl::geometric::SPARS::haveSolution(const std::vector<DenseVertex> &starts
                     }
                     if (opt_->isCostBetterThan(pathCost, sol_cost))
                     {
+                        if (static_cast<bool>(pdef_->getIntermediateSolutionCallback()))
+                            pdef_->getIntermediateSolutionCallback()(this, {}, pathCost);
                         solution = p;
                         sol_cost = pathCost;
                     }
